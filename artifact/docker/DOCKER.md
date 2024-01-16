@@ -1,6 +1,8 @@
-# Docker
+# Docker Guide
 
-## 1. Spring boot 프로젝트 
+## Dockerfile
+
+#### Spring boot 프로젝트 이미지 생성
 
 ### STEP1
 
@@ -64,4 +66,52 @@ ENTRYPOINT ["java", "-jar", "/myboot.jar"]
 ```shell
 docker build -t [이미지 이름] [Dockerfile 스크립트 파일 경로]
 docker build -t springbootapp01 C:\Users\hyuns\docker-image
+```
+
+
+## 2. Docker-compose
+
+spring boot 서버가 mysql 서버에 의존하고 있을 때 두 이미지를 함께 생성하고 실행 시킬 수 있는 docker-compose 파일을 작성한다
+
+
+#### docker-compose.yml
+
+```yaml
+
+version: '3'
+
+services:
+  mysql001:
+    image: mysql:8.0
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ssafy
+      MYSQL_DATABASE: fiveguys
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_USER: ssafy
+      MYSQL_PASSWORD: ssafy
+      TZ: 'Asia/Seoul'
+    ports:
+      - "3307:3306"
+
+  spring-boot-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql001:3306/fiveguys?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useLegacyDatetimeCode=false
+      SPRING_DATASOURCE_USERNAME: "root"
+      SPRING_DATASOURCE_PASSWORD: "ssafy"
+    depends_on:
+      - mysql001
+
+```
+
+#### docker compose up
+컴포즈 파일의 내용에 따라 컨테이너와 볼륨, 네트워크가 생성되고 실행된다.
+```shell
+docker-compose -f [정의 파일 경로] up [옵션]
+docker-compose -f C:\Users\hyuns\docker\com_folder\docker-compose.yml up -d
 ```
